@@ -1,0 +1,1 @@
+# stamp-mount-size-guide
