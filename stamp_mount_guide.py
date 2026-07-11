@@ -6,7 +6,9 @@ Usage:
 
 Input file (.csv, .xls/.xlsx/.xlsm, .ods, or .numbers) columns, with or without a header row:
     name, catalog_number, width_mm, height_mm
-Output: <output_prefix>.md, <output_prefix>.csv, and <output_prefix>.bbcode.txt (default prefix: stamp_mounts)
+Output: <output_prefix>.md, <output_prefix>.csv, <output_prefix>.bbcode.txt,
+<output_prefix>_checklist.csv, <output_prefix>_checklist.md, and
+<output_prefix>_checklist.bbcode.txt (default prefix: stamp_mounts)
 
 Reading .xlsx/.xlsm/.ods files requires pandas, openpyxl, and odfpy:
     pip install pandas openpyxl odfpy
@@ -39,6 +41,9 @@ MAX_GAP_MM = 3
 
 # Extra length to cut the mount, beyond the stamp's other dimension.
 CUT_ALLOWANCE_MM = 5
+
+# Extra height for the storage box, beyond the mount size.
+BOX_HEIGHT_ALLOWANCE_MM = 5
 
 
 def smallest_fitting_mount(dimension_mm):
@@ -195,6 +200,7 @@ def build_results(stamps):
     results = []
     for name, catalog_number, width_mm, height_mm in stamps:
         mount_size, cut_size, sideways, note = recommend_mount(width_mm, height_mm)
+        box_height = mount_size + BOX_HEIGHT_ALLOWANCE_MM if mount_size is not None else None
         results.append({
             "name": name,
             "catalog_number": catalog_number,
@@ -203,6 +209,7 @@ def build_results(stamps):
             "mount_size": mount_size,
             "cut_size": cut_size,
             "sideways": sideways,
+            "box_height_mm": box_height,
             "note": note,
         })
     return results
@@ -211,7 +218,7 @@ def build_results(stamps):
 def write_csv(results, path):
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["Stamp Name", "Catalog Number", "Width (mm)", "Height (mm)", "Mount Size (mm) (Scott/Prinz)", "Cut Size (mm)", "Sideways", "Note"])
+        writer.writerow(["Stamp Name", "Catalog Number", "Width (mm)", "Height (mm)", "Mount Size (mm) (Scott/Prinz)", "Cut Size (mm)", "Sideways", "Box Height (mm)", "Note"])
         for r in results:
             writer.writerow([
                 r["name"],
@@ -221,6 +228,7 @@ def write_csv(results, path):
                 fmt(r["mount_size"]),
                 fmt(r["cut_size"]),
                 "Yes" if r["sideways"] else ("No" if r["sideways"] is not None else ""),
+                fmt(r["box_height_mm"]),
                 r["note"],
             ])
 
@@ -229,28 +237,83 @@ def write_markdown(results, path):
     lines = [
         "# Stamp Mount Guide",
         "",
-        "| Stamp Name | Catalog Number | Width (mm) | Height (mm) | Mount Size (mm) (Scott/Prinz) | Cut Size (mm) | Sideways | Note |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| Stamp Name | Catalog Number | Width (mm) | Height (mm) | Mount Size (mm) (Scott/Prinz) | Cut Size (mm) | Sideways | Box Height (mm) | Note |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for r in results:
         sideways = "Yes" if r["sideways"] else ("No" if r["sideways"] is not None else "")
         mount_size = fmt(r["mount_size"]) if r["mount_size"] is not None else "N/A"
         cut_size = fmt(r["cut_size"]) if r["cut_size"] is not None else "N/A"
-        lines.append(f"| {r['name']} | {r['catalog_number']} | {fmt(r['width_mm'])} | {fmt(r['height_mm'])} | {mount_size} | {cut_size} | {sideways} | {r['note']} |")
+        box_height = fmt(r["box_height_mm"]) if r["box_height_mm"] is not None else "N/A"
+        lines.append(f"| {r['name']} | {r['catalog_number']} | {fmt(r['width_mm'])} | {fmt(r['height_mm'])} | {mount_size} | {cut_size} | {sideways} | {box_height} | {r['note']} |")
     lines.append("")
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
 
 def write_bbcode(results, path):
-    headers = ["Stamp Name", "Catalog Number", "Width (mm)", "Height (mm)", "Mount Size (mm) (Scott/Prinz)", "Cut Size (mm)", "Sideways", "Note"]
+    headers = ["Stamp Name", "Catalog Number", "Width (mm)", "Height (mm)", "Mount Size (mm) (Scott/Prinz)", "Cut Size (mm)", "Sideways", "Box Height (mm)", "Note"]
     lines = ["[table]", "[tr]" + "".join(f"[td][b]{h}[/b][/td]" for h in headers) + "[/tr]"]
     for r in results:
         sideways = "Yes" if r["sideways"] else ("No" if r["sideways"] is not None else "")
         mount_size = fmt(r["mount_size"]) if r["mount_size"] is not None else "N/A"
         cut_size = fmt(r["cut_size"]) if r["cut_size"] is not None else "N/A"
-        cells = [r["name"], r["catalog_number"], fmt(r["width_mm"]), fmt(r["height_mm"]), mount_size, cut_size, sideways, r["note"]]
+        box_height = fmt(r["box_height_mm"]) if r["box_height_mm"] is not None else "N/A"
+        cells = [r["name"], r["catalog_number"], fmt(r["width_mm"]), fmt(r["height_mm"]), mount_size, cut_size, sideways, box_height, r["note"]]
         lines.append("[tr]" + "".join(f"[td]{c}[/td]" for c in cells) + "[/tr]")
+    lines.append("[/table]")
+    lines.append("")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+
+
+def build_checklist(results):
+    """Aggregate results into a checklist of mount sizes needed, sorted by size.
+
+    Stamps with no fitting mount (mount_size is None) are excluded, since
+    they need a custom mount instead of a stock size.
+    """
+    needed = {}
+    for r in results:
+        size = r["mount_size"]
+        if size is None:
+            continue
+        entry = needed.setdefault(size, {"mount_size": size, "quantity": 0, "total_cut_length_mm": 0})
+        entry["quantity"] += 1
+        entry["total_cut_length_mm"] += r["cut_size"]
+    return [needed[size] for size in sorted(needed)]
+
+
+def write_checklist_csv(checklist, path):
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Mount Size (mm) (Scott/Prinz)", "Quantity", "Total Cut Length (mm)"])
+        for c in checklist:
+            writer.writerow([fmt(c["mount_size"]), c["quantity"], fmt(c["total_cut_length_mm"])])
+
+
+def write_checklist_markdown(checklist, path):
+    lines = ["# Stamp Mount Checklist", ""]
+    if not checklist:
+        lines.append("No stock mount sizes needed.")
+    else:
+        for c in checklist:
+            stamp_word = "stamp" if c["quantity"] == 1 else "stamps"
+            lines.append(
+                f"- [ ] {fmt(c['mount_size'])}mm mount strip "
+                f"({c['quantity']} {stamp_word}, {fmt(c['total_cut_length_mm'])}mm total cut length)"
+            )
+    lines.append("")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+
+
+def write_checklist_bbcode(checklist, path):
+    headers = ["Mount Size (mm) (Scott/Prinz)", "Quantity", "Total Cut Length (mm)"]
+    lines = ["[table]", "[tr]" + "".join(f"[td][b]{h}[/b][/td]" for h in headers) + "[/tr]"]
+    for c in checklist:
+        cells = [fmt(c["mount_size"]), c["quantity"], fmt(c["total_cut_length_mm"])]
+        lines.append("[tr]" + "".join(f"[td]{cell}[/td]" for cell in cells) + "[/tr]")
     lines.append("[/table]")
     lines.append("")
     with open(path, "w", encoding="utf-8") as f:
@@ -284,7 +347,16 @@ def main():
     write_markdown(results, md_path)
     write_bbcode(results, bbcode_path)
 
+    checklist = build_checklist(results)
+    checklist_csv_path = f"{args.output_prefix}_checklist.csv"
+    checklist_md_path = f"{args.output_prefix}_checklist.md"
+    checklist_bbcode_path = f"{args.output_prefix}_checklist.bbcode.txt"
+    write_checklist_csv(checklist, checklist_csv_path)
+    write_checklist_markdown(checklist, checklist_md_path)
+    write_checklist_bbcode(checklist, checklist_bbcode_path)
+
     print(f"Wrote {len(results)} stamps to {csv_path}, {md_path}, and {bbcode_path}")
+    print(f"Wrote mount checklist to {checklist_csv_path}, {checklist_md_path}, and {checklist_bbcode_path}")
 
 
 if __name__ == "__main__":

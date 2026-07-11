@@ -65,8 +65,9 @@ Example:
 python3 stamp_mount_guide.py stamps.csv -o stamp_mounts
 ```
 
-This writes `stamp_mounts.csv`, `stamp_mounts.md`, and
-`stamp_mounts.bbcode.txt` to the current directory.
+This writes `stamp_mounts.csv`, `stamp_mounts.md`, `stamp_mounts.bbcode.txt`,
+`stamp_mounts_checklist.csv`, `stamp_mounts_checklist.md`, and
+`stamp_mounts_checklist.bbcode.txt` to the current directory.
 
 ## Input format
 
@@ -114,7 +115,31 @@ Each output has these columns:
 | Mount Size (mm) (Scott/Prinz) | Recommended mount strip size                                  |
 | Cut Size (mm)                 | How wide to cut the strip                                     |
 | Sideways                      | `Yes` if the stamp should be mounted sideways, `No` otherwise |
+| Box Height (mm)               | Mount size + 5mm, for sizing a storage box                    |
 | Note                          | Explains any fallback (e.g. no mount is large enough)         |
+
+## Mount checklist
+
+Alongside the per-stamp results, the tool also writes a shopping/cutting
+checklist that aggregates how many mount strips of each size are needed
+across the whole collection:
+
+- **`<prefix>_checklist.csv`** — one row per mount size.
+- **`<prefix>_checklist.md`** — the same data as a Markdown task list
+  (`- [ ]`), so you can check off sizes as you cut or buy them.
+- **`<prefix>_checklist.bbcode.txt`** — a `[table]`/`[tr]`/`[td]` BBCode
+  table, for pasting into forum posts.
+
+The checklist has these columns (CSV/BBCode) or per-item details (Markdown):
+
+| Column                        | Meaning                                             |
+| ----------------------------- | --------------------------------------------------- |
+| Mount Size (mm) (Scott/Prinz) | The stock mount size                                |
+| Quantity                      | Number of stamps needing that size                  |
+| Total Cut Length (mm)         | Sum of the cut sizes for all stamps using that size |
+
+Stamps with no fitting stock mount (flagged for a custom Hawid glue pen
+mount) are excluded from the checklist.
 
 ## Available mount sizes
 
