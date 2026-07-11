@@ -278,18 +278,17 @@ def build_checklist(results):
         size = r["mount_size"]
         if size is None:
             continue
-        entry = needed.setdefault(size, {"mount_size": size, "quantity": 0, "total_cut_length_mm": 0})
+        entry = needed.setdefault(size, {"mount_size": size, "quantity": 0})
         entry["quantity"] += 1
-        entry["total_cut_length_mm"] += r["cut_size"]
     return [needed[size] for size in sorted(needed)]
 
 
 def write_checklist_csv(checklist, path):
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["Mount Size (mm) (Scott/Prinz)", "Quantity", "Total Cut Length (mm)"])
+        writer.writerow(["Mount Size (mm) (Scott/Prinz)", "Number of Stamps"])
         for c in checklist:
-            writer.writerow([fmt(c["mount_size"]), c["quantity"], fmt(c["total_cut_length_mm"])])
+            writer.writerow([fmt(c["mount_size"]), c["quantity"]])
 
 
 def write_checklist_markdown(checklist, path):
@@ -299,20 +298,17 @@ def write_checklist_markdown(checklist, path):
     else:
         for c in checklist:
             stamp_word = "stamp" if c["quantity"] == 1 else "stamps"
-            lines.append(
-                f"- [ ] {fmt(c['mount_size'])}mm mount strip "
-                f"({c['quantity']} {stamp_word}, {fmt(c['total_cut_length_mm'])}mm total cut length)"
-            )
+            lines.append(f"- [ ] {fmt(c['mount_size'])}mm mount strip ({c['quantity']} {stamp_word})")
     lines.append("")
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
 
 def write_checklist_bbcode(checklist, path):
-    headers = ["Mount Size (mm) (Scott/Prinz)", "Quantity", "Total Cut Length (mm)"]
+    headers = ["Mount Size (mm) (Scott/Prinz)", "Number of Stamps"]
     lines = ["[table]", "[tr]" + "".join(f"[td][b]{h}[/b][/td]" for h in headers) + "[/tr]"]
     for c in checklist:
-        cells = [fmt(c["mount_size"]), c["quantity"], fmt(c["total_cut_length_mm"])]
+        cells = [fmt(c["mount_size"]), c["quantity"]]
         lines.append("[tr]" + "".join(f"[td]{cell}[/td]" for cell in cells) + "[/tr]")
     lines.append("[/table]")
     lines.append("")

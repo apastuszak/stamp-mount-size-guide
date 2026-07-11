@@ -132,11 +132,10 @@ across the whole collection:
 
 The checklist has these columns (CSV/BBCode) or per-item details (Markdown):
 
-| Column                        | Meaning                                             |
-| ----------------------------- | --------------------------------------------------- |
-| Mount Size (mm) (Scott/Prinz) | The stock mount size                                |
-| Quantity                      | Number of stamps needing that size                  |
-| Total Cut Length (mm)         | Sum of the cut sizes for all stamps using that size |
+| Column                        | Meaning                            |
+| ----------------------------- | ---------------------------------- |
+| Mount Size (mm) (Scott/Prinz) | The stock mount size               |
+| Number of Stamps              | Number of stamps needing that size |
 
 Stamps with no fitting stock mount (flagged for a custom Hawid glue pen
 mount) are excluded from the checklist.

@@ -7,6 +7,9 @@ stamps.numbers
 stamp_mounts.csv
 stamp_mounts.md
 stamp_mounts.bbcode.txt
+stamp_mounts_checklist.csv
+stamp_mounts_checklist.md
+stamp_mounts_checklist.bbcode.txt
 
 # Editor/office lock files
 .~lock.*#
