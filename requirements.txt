@@ -1,0 +1,7 @@
+# Optional: only needed to read .xls/.xlsx/.xlsm/.ods/.numbers input files.
+# CSV input works with no dependencies.
+pandas
+openpyxl
+odfpy
+xlrd
+numbers-parser

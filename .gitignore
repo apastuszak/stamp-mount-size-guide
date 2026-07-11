@@ -1,0 +1,17 @@
+# Personal stamp collection data and generated outputs
+stamps.csv
+stamps.xls
+stamps.xlsx
+stamps.ods
+stamps.numbers
+stamp_mounts.csv
+stamp_mounts.md
+stamp_mounts.bbcode.txt
+
+# Editor/office lock files
+.~lock.*#
+
+# Python
+__pycache__/
+*.pyc
+.venv/
