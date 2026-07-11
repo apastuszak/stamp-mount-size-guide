@@ -18,8 +18,11 @@ collection:
 3. If the gap is 3mm or more (a loose fit), try mounting the stamp
    **sideways** instead — match the mount size against the stamp's width, and
    cut the strip to the stamp's **height + 5mm**.
-4. If a stamp is too large for the largest available mount in both
-   orientations, it's flagged in the output instead of silently guessed at.
+4. If neither orientation gets within 3mm, use whichever mount is the
+   closer fit and flag it in the Note column with how much bigger it is
+   and a suggestion to use a Hawid glue pen to make a custom mount instead.
+5. If a stamp is too large for the largest available mount in both
+   orientations, it's flagged the same way, with no mount size given.
 
 The 5mm cut allowance leaves clearance to slide the stamp in and out of the
 mount without splitting the seams.

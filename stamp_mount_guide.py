@@ -51,25 +51,38 @@ def smallest_fitting_mount(dimension_mm):
 def recommend_mount(width_mm, height_mm):
     """Return (mount_size, cut_size, sideways, note) for one stamp."""
     height_mount = smallest_fitting_mount(height_mm)
+    height_gap = height_mount - height_mm if height_mount is not None else None
 
-    if height_mount is not None and (height_mount - height_mm) < MAX_GAP_MM:
+    if height_gap is not None and height_gap < MAX_GAP_MM:
         cut_size = width_mm + CUT_ALLOWANCE_MM
         return height_mount, cut_size, False, ""
 
     # Height match is a poor fit (or doesn't exist) - try the width instead
     # (stamp mounted sideways).
     width_mount = smallest_fitting_mount(width_mm)
-    if width_mount is not None:
+    width_gap = width_mount - width_mm if width_mount is not None else None
+
+    if width_gap is not None and width_gap < MAX_GAP_MM:
         cut_size = height_mm + CUT_ALLOWANCE_MM
         return width_mount, cut_size, True, ""
 
-    # Width doesn't fit any mount either. Fall back to the height match if
-    # it exists, even though the gap is large.
-    if height_mount is not None:
-        cut_size = width_mm + CUT_ALLOWANCE_MM
-        return height_mount, cut_size, False, "gap >= 3mm, no better width fit"
+    # Neither orientation gets within MAX_GAP_MM. Use whichever mount is the
+    # closer fit, but flag it as needing a custom mount instead.
+    candidates = []
+    if height_gap is not None:
+        candidates.append((height_gap, height_mount, False, width_mm + CUT_ALLOWANCE_MM))
+    if width_gap is not None:
+        candidates.append((width_gap, width_mount, True, height_mm + CUT_ALLOWANCE_MM))
 
-    return None, None, None, "no mount large enough"
+    if not candidates:
+        return None, None, None, "No mount is large enough. Use a Hawid glue pen to make a custom mount."
+
+    gap, mount_size, sideways, cut_size = min(candidates, key=lambda c: c[0])
+    note = (
+        f"Closest mount is {fmt(gap)}mm bigger than the stamp. "
+        "Use a Hawid glue pen to make a custom mount."
+    )
+    return mount_size, cut_size, sideways, note
 
 
 def load_rows(path):
