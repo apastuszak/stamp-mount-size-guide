@@ -106,17 +106,18 @@ Every run produces the same data in three formats:
 
 Each output has these columns:
 
-| Column                        | Meaning                                                                 |
-| ----------------------------- | ----------------------------------------------------------------------- |
-| Stamp Name                    | From the input                                                          |
-| Catalog Number                | From the input                                                          |
-| Width (mm)                    | From the input                                                          |
-| Height (mm)                   | From the input                                                          |
-| Mount Size (mm) (Scott/Prinz) | Recommended mount strip size                                            |
-| Cut Size (mm)                 | How wide to cut the strip                                               |
-| Sideways                      | `Yes` if the stamp should be mounted sideways, `No` otherwise           |
-| Box Height (mm)               | Mount size + 2mm (cut size + 2mm if sideways), for sizing a storage box |
-| Note                          | Explains any fallback (e.g. no mount is large enough)                   |
+| Column                        | Meaning                                                               |
+| ----------------------------- | --------------------------------------------------------------------- |
+| Stamp Name                    | From the input                                                        |
+| Catalog Number                | From the input                                                        |
+| Width (mm)                    | From the input                                                        |
+| Height (mm)                   | From the input                                                        |
+| Mount Size (mm) (Scott/Prinz) | Recommended mount strip size                                          |
+| Cut Size (mm)                 | How wide to cut the strip                                             |
+| Sideways                      | `Yes` if the stamp should be mounted sideways, `No` otherwise         |
+| Box Height (mm)               | Mount size + 5mm (or cut size, if sideways), for sizing a storage box |
+| Box Width (mm)                | Cut size (or mount size + 5mm, if sideways), for sizing a storage box |
+| Note                          | Explains any fallback (e.g. no mount is large enough)                 |
 
 ## Mount checklist
 

@@ -42,8 +42,8 @@ MAX_GAP_MM = 3
 # Extra length to cut the mount, beyond the stamp's other dimension.
 CUT_ALLOWANCE_MM = 5
 
-# Extra height for the storage box, beyond the mount size.
-BOX_HEIGHT_ALLOWANCE_MM = 2
+# Extra size for the storage box, beyond the mount size.
+BOX_ALLOWANCE_MM = 5
 
 
 def smallest_fitting_mount(dimension_mm):
@@ -202,10 +202,13 @@ def build_results(stamps):
         mount_size, cut_size, sideways, note = recommend_mount(width_mm, height_mm)
         if mount_size is None:
             box_height = None
+            box_width = None
         elif sideways:
-            box_height = cut_size + BOX_HEIGHT_ALLOWANCE_MM
+            box_height = cut_size
+            box_width = mount_size + BOX_ALLOWANCE_MM
         else:
-            box_height = mount_size + BOX_HEIGHT_ALLOWANCE_MM
+            box_height = mount_size + BOX_ALLOWANCE_MM
+            box_width = cut_size
         results.append({
             "name": name,
             "catalog_number": catalog_number,
@@ -215,6 +218,7 @@ def build_results(stamps):
             "cut_size": cut_size,
             "sideways": sideways,
             "box_height_mm": box_height,
+            "box_width_mm": box_width,
             "note": note,
         })
     return results
@@ -223,7 +227,7 @@ def build_results(stamps):
 def write_csv(results, path):
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["Stamp Name", "Catalog Number", "Width (mm)", "Height (mm)", "Mount Size (mm) (Scott/Prinz)", "Cut Size (mm)", "Sideways", "Box Height (mm)", "Note"])
+        writer.writerow(["Stamp Name", "Catalog Number", "Width (mm)", "Height (mm)", "Mount Size (mm) (Scott/Prinz)", "Cut Size (mm)", "Sideways", "Box Height (mm)", "Box Width (mm)", "Note"])
         for r in results:
             writer.writerow([
                 r["name"],
@@ -234,6 +238,7 @@ def write_csv(results, path):
                 fmt(r["cut_size"]),
                 "Yes" if r["sideways"] else ("No" if r["sideways"] is not None else ""),
                 fmt(r["box_height_mm"]),
+                fmt(r["box_width_mm"]),
                 r["note"],
             ])
 
@@ -242,29 +247,31 @@ def write_markdown(results, path):
     lines = [
         "# Stamp Mount Guide",
         "",
-        "| Stamp Name | Catalog Number | Width (mm) | Height (mm) | Mount Size (mm) (Scott/Prinz) | Cut Size (mm) | Sideways | Box Height (mm) | Note |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| Stamp Name | Catalog Number | Width (mm) | Height (mm) | Mount Size (mm) (Scott/Prinz) | Cut Size (mm) | Sideways | Box Height (mm) | Box Width (mm) | Note |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for r in results:
         sideways = "Yes" if r["sideways"] else ("No" if r["sideways"] is not None else "")
         mount_size = fmt(r["mount_size"]) if r["mount_size"] is not None else "N/A"
         cut_size = fmt(r["cut_size"]) if r["cut_size"] is not None else "N/A"
         box_height = fmt(r["box_height_mm"]) if r["box_height_mm"] is not None else "N/A"
-        lines.append(f"| {r['name']} | {r['catalog_number']} | {fmt(r['width_mm'])} | {fmt(r['height_mm'])} | {mount_size} | {cut_size} | {sideways} | {box_height} | {r['note']} |")
+        box_width = fmt(r["box_width_mm"]) if r["box_width_mm"] is not None else "N/A"
+        lines.append(f"| {r['name']} | {r['catalog_number']} | {fmt(r['width_mm'])} | {fmt(r['height_mm'])} | {mount_size} | {cut_size} | {sideways} | {box_height} | {box_width} | {r['note']} |")
     lines.append("")
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
 
 def write_bbcode(results, path):
-    headers = ["Stamp Name", "Catalog Number", "Width (mm)", "Height (mm)", "Mount Size (mm) (Scott/Prinz)", "Cut Size (mm)", "Sideways", "Box Height (mm)", "Note"]
+    headers = ["Stamp Name", "Catalog Number", "Width (mm)", "Height (mm)", "Mount Size (mm) (Scott/Prinz)", "Cut Size (mm)", "Sideways", "Box Height (mm)", "Box Width (mm)", "Note"]
     lines = ["[table]", "[tr]" + "".join(f"[td][b]{h}[/b][/td]" for h in headers) + "[/tr]"]
     for r in results:
         sideways = "Yes" if r["sideways"] else ("No" if r["sideways"] is not None else "")
         mount_size = fmt(r["mount_size"]) if r["mount_size"] is not None else "N/A"
         cut_size = fmt(r["cut_size"]) if r["cut_size"] is not None else "N/A"
         box_height = fmt(r["box_height_mm"]) if r["box_height_mm"] is not None else "N/A"
-        cells = [r["name"], r["catalog_number"], fmt(r["width_mm"]), fmt(r["height_mm"]), mount_size, cut_size, sideways, box_height, r["note"]]
+        box_width = fmt(r["box_width_mm"]) if r["box_width_mm"] is not None else "N/A"
+        cells = [r["name"], r["catalog_number"], fmt(r["width_mm"]), fmt(r["height_mm"]), mount_size, cut_size, sideways, box_height, box_width, r["note"]]
         lines.append("[tr]" + "".join(f"[td]{c}[/td]" for c in cells) + "[/tr]")
     lines.append("[/table]")
     lines.append("")
