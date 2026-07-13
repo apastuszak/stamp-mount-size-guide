@@ -43,7 +43,7 @@ MAX_GAP_MM = 3
 CUT_ALLOWANCE_MM = 5
 
 # Extra height for the storage box, beyond the mount size.
-BOX_HEIGHT_ALLOWANCE_MM = 5
+BOX_HEIGHT_ALLOWANCE_MM = 2
 
 
 def smallest_fitting_mount(dimension_mm):
@@ -200,7 +200,12 @@ def build_results(stamps):
     results = []
     for name, catalog_number, width_mm, height_mm in stamps:
         mount_size, cut_size, sideways, note = recommend_mount(width_mm, height_mm)
-        box_height = mount_size + BOX_HEIGHT_ALLOWANCE_MM if mount_size is not None else None
+        if mount_size is None:
+            box_height = None
+        elif sideways:
+            box_height = cut_size + BOX_HEIGHT_ALLOWANCE_MM
+        else:
+            box_height = mount_size + BOX_HEIGHT_ALLOWANCE_MM
         results.append({
             "name": name,
             "catalog_number": catalog_number,
